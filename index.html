@@ -304,10 +304,34 @@
             }
         }
         
-        /* Estilos responsivos para móviles */
+        /* ===== ESTILOS RESPONSIVOS AVANZADOS ===== */
+        
+        /* Escritorio grande */
+        @media (min-width: 1201px) {
+            .visualization-container {
+                height: 65vh;
+            }
+        }
+        
+        /* Escritorio standard y tablets horizontales */
+        @media (max-width: 1200px) and (min-width: 769px) {
+            .visualization-container {
+                height: 55vh;
+            }
+            
+            .controls-panel {
+                width: 280px;
+            }
+        }
+        
+        /* Tablets verticales y móviles grandes */
         @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
             h1 {
-                font-size: 1.8rem;
+                font-size: 2rem;
             }
             
             .subtitle {
@@ -355,9 +379,47 @@
             }
         }
         
-        @media (max-width: 480px) {
+        /* Móviles en orientación horizontal */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .visualization-container {
+                height: 70vh;
+            }
+            
+            header {
+                padding: 10px 0;
+                margin-bottom: 10px;
+            }
+            
+            h1 {
+                font-size: 1.6rem;
+                margin-bottom: 5px;
+            }
+            
+            .subtitle {
+                font-size: 0.9rem;
+                margin-bottom: 10px;
+            }
+            
+            .nav-tabs {
+                margin: 10px 0;
+            }
+            
+            .nav-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .controls-panel {
+                width: 260px;
+                left: 10px;
+                bottom: 10px;
+            }
+        }
+        
+        /* Móviles pequeños en vertical */
+        @media (max-width: 480px) and (orientation: portrait) {
             .container {
-                padding: 15px;
+                padding: 10px;
             }
             
             h1 {
@@ -385,6 +447,45 @@
             }
         }
         
+        /* Tabletas pequeñas en vertical */
+        @media (min-width: 481px) and (max-width: 768px) and (orientation: portrait) {
+            .visualization-container {
+                height: 45vh;
+            }
+        }
+        
+        /* Modo inmersivo para visualización del toroide */
+        .immersive-mode .container > *:not(.visualization-container) {
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+        
+        .immersive-mode .container > *:not(.visualization-container):hover {
+            opacity: 1;
+        }
+        
+        /* Botón para modo inmersivo */
+        .immersive-toggle {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 15;
+            background: rgba(0, 20, 40, 0.7);
+            color: var(--accent3);
+            border: 1px solid var(--accent3);
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+        
+        .immersive-toggle:hover {
+            background: rgba(0, 30, 60, 0.8);
+            box-shadow: var(--glow);
+        }
+        
         /* Botón para mostrar/ocultar controles en móvil */
         .toggle-controls {
             display: none;
@@ -403,6 +504,7 @@
             cursor: pointer;
         }
         
+        /* Mostrar botón de controles solo en móviles */
         @media (max-width: 768px) {
             .toggle-controls {
                 display: flex;
@@ -419,6 +521,24 @@
                 transform: translateY(0);
             }
         }
+        
+        /* Ajustes específicos para tablets en orientación vertical */
+        @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+            .visualization-container {
+                height: 50vh;
+            }
+            
+            .controls-panel {
+                width: 280px;
+            }
+        }
+        
+        /* Ajustes para pantallas muy altas (relación de aspecto inusual) */
+        @media (min-height: 1000px) {
+            .visualization-container {
+                height: 70vh;
+            }
+        }
     </style>
 </head>
 <body>
@@ -428,6 +548,7 @@
         <span>🌀 ASHIRA 5.3</span>
     </div>
     
+    <button class="immersive-toggle" id="immersiveToggle">Modo Inmersivo</button>
     <button class="toggle-controls" id="toggleControls">⚙️</button>
     
     <div class="container">
@@ -471,7 +592,8 @@
                 <h2>Instrucciones de Interacción</h2>
                 <p>• Utiliza los controles deslizantes para ajustar el número de partículas, la velocidad y el tamaño.</p>
                 <p>• Haz clic y arrastra para rotar el toroide en 3D.</p>
-                <p>• Explora las diferentes pestañas para aprender más sobre los campos toroidales y su significado.</p>
+                <p>• Usa el "Modo Inmersivo" para enfocarte en la visualización.</p>
+                <p>• Explora las diferentes pestañas para aprender más sobre los campos toroidales.</p>
             </div>
         </div>
         
@@ -548,6 +670,49 @@
     </div>
 
     <script>
+        // ===== DETECCIÓN DE DISPOSITIVO Y ORIENTACIÓN =====
+        let isMobile = window.innerWidth <= 768;
+        let isTablet = window.innerWidth <= 1024 && window.innerWidth > 768;
+        let isPortrait = window.innerHeight > window.innerWidth;
+        
+        // Actualizar detección al cambiar tamaño u orientación
+        function updateDeviceDetection() {
+            isMobile = window.innerWidth <= 768;
+            isTablet = window.innerWidth <= 1024 && window.innerWidth > 768;
+            isPortrait = window.innerHeight > window.innerWidth;
+            
+            // Ajustar parámetros del toroide según el dispositivo
+            adjustTorusForDevice();
+        }
+        
+        // Ajustar parámetros del toroide para el dispositivo
+        function adjustTorusForDevice() {
+            if (isMobile) {
+                if (isPortrait) {
+                    // Móvil en vertical - menos partículas para mejor rendimiento
+                    particleSlider.value = 800;
+                    particleCount = 800;
+                } else {
+                    // Móvil en horizontal - partículas moderadas
+                    particleSlider.value = 1200;
+                    particleCount = 1200;
+                }
+            } else if (isTablet) {
+                // Tablet - partículas estándar
+                particleSlider.value = 1500;
+                particleCount = 1500;
+            } else {
+                // Escritorio - máximo de partículas
+                particleSlider.value = 2000;
+                particleCount = 2000;
+            }
+            
+            particleCountElement.textContent = `${particleCount} partículas`;
+            initParticles();
+        }
+        
+        // ===== CONFIGURACIÓN INICIAL =====
+        
         // Configuración de partículas de fondo
         function createParticles() {
             const container = document.getElementById('particles');
@@ -581,22 +746,40 @@
             }, 3000);
         }
         
+        // Modo inmersivo
+        function setupImmersiveMode() {
+            const toggleBtn = document.getElementById('immersiveToggle');
+            const container = document.querySelector('.container');
+            
+            toggleBtn.addEventListener('click', () => {
+                document.body.classList.toggle('immersive-mode');
+                toggleBtn.textContent = document.body.classList.contains('immersive-mode') 
+                    ? 'Salir Modo Inmersivo' 
+                    : 'Modo Inmersivo';
+            });
+        }
+        
         // Toggle controles en móvil
         function setupMobileControls() {
             const toggleBtn = document.getElementById('toggleControls');
             const controlsPanel = document.getElementById('controlsPanel');
             
-            toggleBtn.addEventListener('click', () => {
-                controlsPanel.classList.toggle('visible');
-            });
-            
-            // Cerrar controles al hacer clic fuera en móviles
-            if (window.innerWidth <= 768) {
+            if (isMobile) {
+                toggleBtn.style.display = 'flex';
+                
+                toggleBtn.addEventListener('click', () => {
+                    controlsPanel.classList.toggle('visible');
+                });
+                
+                // Cerrar controles al hacer clic fuera en móviles
                 document.addEventListener('click', (e) => {
                     if (!controlsPanel.contains(e.target) && e.target !== toggleBtn && controlsPanel.classList.contains('visible')) {
                         controlsPanel.classList.remove('visible');
                     }
                 });
+            } else {
+                toggleBtn.style.display = 'none';
+                controlsPanel.style.transform = 'none';
             }
         }
         
@@ -618,7 +801,7 @@
             });
         });
         
-        // Código del toroide
+        // ===== CÓDIGO DEL TOROIDE =====
         const canvas = document.getElementById('toroide');
         const ctx = canvas.getContext('2d');
         
@@ -628,7 +811,11 @@
         }
         
         resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            updateDeviceDetection();
+            setupMobileControls();
+        });
         
         // Variables de control
         let particleCount = 1500;
@@ -660,11 +847,28 @@
         });
         
         const particles = [];
-        const R = 150; // radio mayor del toroide
-        const r = 50;  // radio menor del toroide
+        let R = 150; // radio mayor del toroide (ajustable)
+        let r = 50;  // radio menor del toroide (ajustable)
         let angleX = 0;
         let angleY = 0;
         let isInteracting = false;
+        
+        // Ajustar tamaño del toroide según el dispositivo
+        function adjustTorusSize() {
+            if (isMobile && isPortrait) {
+                R = 100;
+                r = 35;
+            } else if (isMobile && !isPortrait) {
+                R = 120;
+                r = 40;
+            } else if (isTablet) {
+                R = 140;
+                r = 45;
+            } else {
+                R = 150;
+                r = 50;
+            }
+        }
         
         // Inicializar partículas
         function initParticles() {
@@ -694,8 +898,6 @@
                 });
             }
         }
-        
-        initParticles();
         
         // Proyección 3D a 2D
         function project(x, y, z) {
@@ -831,12 +1033,25 @@
             mouseDown = false;
         });
         
-        // Iniciar todo
-        createParticles();
-        updateDate();
-        hideBadge();
-        setupMobileControls();
-        animate();
+        // ===== INICIAR TODAS LAS FUNCIONALIDADES =====
+        function initializeAll() {
+            createParticles();
+            updateDate();
+            hideBadge();
+            setupImmersiveMode();
+            updateDeviceDetection();
+            setupMobileControls();
+            adjustTorusSize();
+            initParticles();
+            animate();
+        }
+        
+        // Iniciar cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeAll);
+        } else {
+            initializeAll();
+        }
     </script>
 </body>
 </html>
